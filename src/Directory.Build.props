@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
-    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" Condition=" '$(DisableNbgv)' != 'true' " />
+    <PackageReference Include="GitVersion.MsBuild" PrivateAssets="All" />
   </ItemGroup>
 
   <PropertyGroup Condition="$(ProjectName.EndsWith('.Tests'))">
