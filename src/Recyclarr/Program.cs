@@ -1,7 +1,8 @@
+using System.CommandLine;
 using System.Diagnostics;
 using System.Text;
 using Autofac;
-using CliFx;
+using Upstream.CommandLine;
 
 namespace Recyclarr;
 
@@ -11,6 +12,9 @@ internal static class Program
 
     public static async Task<int> Main()
     {
+        var root = new RootCommand();
+        root.AddOption(new Option<bool>());
+
         var status = await new CliApplicationBuilder()
             .AddCommands(GetAllCommandTypes())
             .SetExecutableName(ExecutableName)
@@ -19,6 +23,12 @@ internal static class Program
             .RunAsync();
 
         return status;
+    }
+
+    private static CommandLineApplication BuildCli()
+    {
+        return new CommandLineApplication()
+            .AddCommandGroup("list", )
     }
 
     private static IEnumerable<Type> GetAllCommandTypes()

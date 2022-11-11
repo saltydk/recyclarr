@@ -1,11 +1,12 @@
 using System.Data.HashFunction.FNV;
 using System.IO.Abstractions;
 using System.Text;
+using Recyclarr.Command;
 using TrashLib.Cache;
 using TrashLib.Config.Services;
 using TrashLib.Startup;
 
-namespace Recyclarr.Command.Helpers;
+namespace Recyclarr.Config;
 
 public class CacheStoragePath : ICacheStoragePath
 {

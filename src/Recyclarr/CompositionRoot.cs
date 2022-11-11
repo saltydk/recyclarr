@@ -5,7 +5,6 @@ using Autofac.Core.Activators.Reflection;
 using Autofac.Extras.Ordering;
 using CliFx;
 using Common;
-using Recyclarr.Command.Helpers;
 using Recyclarr.Command.Setup;
 using Recyclarr.Config;
 using Recyclarr.Logging;

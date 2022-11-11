@@ -2,7 +2,7 @@ using Autofac;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
-using Recyclarr.Command.Helpers;
+using Recyclarr.Config;
 using Recyclarr.TestLibrary;
 using TrashLib.Config.Services;
 

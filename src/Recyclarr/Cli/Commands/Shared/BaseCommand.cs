@@ -1,16 +1,24 @@
+using System.CommandLine;
+using System.ComponentModel;
 using Autofac;
-using CliFx;
-using CliFx.Attributes;
-using CliFx.Infrastructure;
 using JetBrains.Annotations;
 using MoreLinq.Extensions;
 using Recyclarr.Command.Setup;
 using Recyclarr.Logging;
 using Serilog;
 using Serilog.Events;
+using Spectre.Console.Cli;
 using TrashLib.Startup;
 
 namespace Recyclarr.Command;
+
+public class BaseCommandSettings : CommandSettings
+{
+    [CommandOption("-d|--debug")]
+    [Description("Debug logs are shown in console output")]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public bool Debug { get; init; }
+}
 
 public abstract class BaseCommand : ICommand
 {

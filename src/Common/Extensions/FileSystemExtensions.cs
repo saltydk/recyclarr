@@ -1,13 +1,13 @@
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
-using CliFx.Infrastructure;
+using Spectre.Console;
 
 namespace Common.Extensions;
 
 public static class FileSystemExtensions
 {
     public static void MergeDirectory(this IFileSystem fs, IDirectoryInfo targetDir, IDirectoryInfo destDir,
-        IConsole? console = null)
+        IAnsiConsole? console = null)
     {
         var directories = targetDir
             .EnumerateDirectories("*", SearchOption.AllDirectories)
@@ -16,14 +16,14 @@ public static class FileSystemExtensions
 
         foreach (var dir in directories)
         {
-            console?.Output.WriteLine($" - Attributes: {dir.Attributes}");
+            console?.WriteLine($" - Attributes: {dir.Attributes}");
 
             // Is it a symbolic link?
             if ((dir.Attributes & FileAttributes.ReparsePoint) != 0)
             {
                 var newPath = RelocatePath(dir.FullName, targetDir.FullName, destDir.FullName);
                 fs.Directory.CreateDirectory(fs.Path.GetDirectoryName(newPath));
-                console?.Output.WriteLine($" - Symlink:  {dir.FullName} :: TO :: {newPath}");
+                console?.WriteLine($" - Symlink:  {dir.FullName} :: TO :: {newPath}");
                 dir.MoveTo(newPath);
                 continue;
             }
@@ -33,12 +33,12 @@ public static class FileSystemExtensions
             {
                 var newPath = RelocatePath(file.FullName, targetDir.FullName, destDir.FullName);
                 fs.Directory.CreateDirectory(fs.Path.GetDirectoryName(newPath));
-                console?.Output.WriteLine($" - Moving:   {file.FullName} :: TO :: {newPath}");
+                console?.WriteLine($" - Moving:   {file.FullName} :: TO :: {newPath}");
                 file.MoveTo(newPath);
             }
 
             // Delete the directory now that it is empty.
-            console?.Output.WriteLine($" - Deleting: {dir.FullName}");
+            console?.WriteLine($" - Deleting: {dir.FullName}");
             dir.Delete();
         }
     }
