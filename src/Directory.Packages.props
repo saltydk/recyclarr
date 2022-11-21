@@ -27,7 +27,7 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageVersion Include="System.Data.HashFunction.FNV" Version="2.0.0" />
-    <PackageVersion Include="System.IO.Abstractions" Version="17.2.3" />
+    <PackageVersion Include="System.IO.Abstractions" Version="17.2.26" />
     <PackageVersion Include="System.Reactive" Version="5.0.0" />
     <PackageVersion Include="TestableIO.System.IO.Abstractions.Extensions" Version="1.0.32" />
     <PackageVersion Include="YamlDotNet" Version="12.0.2" />
