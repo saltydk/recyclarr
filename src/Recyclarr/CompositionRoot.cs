@@ -3,12 +3,12 @@ using System.Reflection;
 using Autofac;
 using Autofac.Core.Activators.Reflection;
 using Autofac.Extras.Ordering;
-using CliFx;
 using Common;
 using Recyclarr.Command.Setup;
 using Recyclarr.Config;
 using Recyclarr.Logging;
 using Recyclarr.Migration;
+using Spectre.Console.Cli;
 using TrashLib.Cache;
 using TrashLib.Config;
 using TrashLib.Config.Services;
@@ -27,12 +27,7 @@ namespace Recyclarr;
 
 public static class CompositionRoot
 {
-    public static ILifetimeScope Setup(Action<ContainerBuilder>? extraRegistrations = null)
-    {
-        return Setup(new ContainerBuilder(), extraRegistrations);
-    }
-
-    private static ILifetimeScope Setup(ContainerBuilder builder, Action<ContainerBuilder>? extraRegistrations = null)
+    public static void Setup(ContainerBuilder builder)
     {
         RegisterAppPaths(builder);
         RegisterLogger(builder);
@@ -52,16 +47,11 @@ public static class CompositionRoot
         builder.RegisterModule<CacheAutofacModule>();
         builder.RegisterType<CacheStoragePath>().As<ICacheStoragePath>();
         builder.RegisterType<ServerInfo>().As<IServerInfo>();
-        builder.RegisterType<ProgressBar>();
 
         ConfigurationRegistrations(builder);
         CommandRegistrations(builder);
 
         builder.Register(_ => AutoMapperConfig.Setup()).SingleInstance();
-
-        extraRegistrations?.Invoke(builder);
-
-        return builder.Build();
     }
 
     private static void RegisterLogger(ContainerBuilder builder)
@@ -97,8 +87,7 @@ public static class CompositionRoot
             .As<IBaseCommandSetupTask>()
             .OrderByRegistration();
 
-        // Register all types deriving from CliFx's ICommand. These are all of our supported subcommands.
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-            .AssignableTo<ICommand>();
+            .AssignableTo<CommandSettings>();
     }
 }
