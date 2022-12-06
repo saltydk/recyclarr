@@ -17,11 +17,13 @@ $ErrorActionPreference = "Stop"
 if (-not $NoSingleFile) {
     $selfContained = "true"
     $singleFileArgs = @(
-        "-p:PublishSingleFile=true"
-        "-p:IncludeNativeLibrariesForSelfExtract=true"
-        "-p:PublishReadyToRunComposite=true"
-        "-p:PublishReadyToRunShowWarnings=true"
-        "-p:EnableCompressionInSingleFile=true"
+        '-p:PublishSingleFile=true'
+        '-p:IncludeNativeLibrariesForSelfExtract=true'
+        '-p:PublishReadyToRunComposite=true'
+        '-p:PublishReadyToRunShowWarnings=true'
+
+        # Re-enable when this is fixed: https://github.com/dotnet/runtime/issues/79267
+        '-p:EnableCompressionInSingleFile=false'
     )
 }
 else {
