@@ -24,19 +24,22 @@ env:
   dotnetVersion: "7.0.x"
 
 jobs:
-  test:
-    name: Test
+  build:
+    name: Build Non-MUSL
     strategy:
       fail-fast: true
       matrix:
-        os:
-          - windows-latest
-          - ubuntu-latest
-          - macos-latest
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64, arm64]
+        include:
+          - os: ubuntu-latest
+            arch: arm
+    # Must run on Windows so that version info gets properly set in host EXE. See:
+    # https://github.com/dotnet/runtime/issues/3828
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0 # avoid shallow clone for GitVersion
 
@@ -44,78 +47,38 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.dotnetVersion }}
+
+      - name: Calculate Runtime ID
+        id: calc
+        shell: pwsh
+        run: |
+          $rid = ./ci/GetRuntimeId.ps1 "${{ matrix.arch }}"
+          echo "rid=$rid" >> $env:GITHUB_OUTPUT
 
       - name: Test
-        run: dotnet test src --configuration Release --logger GitHubActions
-
-  build:
-    name: Build Non-MUSL
-    needs: test
-    strategy:
-      fail-fast: true
-      matrix:
-        runtime:
-          - win-x64
-          - win-arm64
-          - linux-x64
-          - linux-arm
-          - linux-arm64
-          - osx-x64
-          - osx-arm64
-    # Must run on Windows so that version info gets properly set in host EXE. See:
-    # https://github.com/dotnet/runtime/issues/3828
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # avoid shallow clone for GitVersion
-
-      - name: Setup .NET Core SDK ${{ env.dotnetVersion }}
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: ${{ env.dotnetVersion }}
+        if: matrix.arch == 'x64'
+        run: dotnet test src -c Release --logger GitHubActions
 
       - name: Publish
         shell: pwsh
-        run: ci/Publish.ps1 -Runtime ${{ matrix.runtime }}
+        run: ci/Publish.ps1 -Runtime ${{ steps.calc.outputs.rid }}
+
+      - name: Smoke
+        if: matrix.arch == 'x64'
+        shell: pwsh
+        run: ci/SmokeTest.ps1 publish/${{ steps.calc.outputs.rid }}/recyclarr
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: recyclarr-${{ matrix.runtime }}
-          path: publish/${{ matrix.runtime }}/*
-
-  smoke:
-    name: Smoke
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: windows-latest, runtime: win-x64 }
-          - { os: ubuntu-latest, runtime: linux-x64 }
-          - { os: macos-latest, runtime: osx-x64 }
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: recyclarr-${{ matrix.runtime }}
-
-      - name: Run Smoke Test
-        shell: pwsh
-        run: ci/SmokeTest.ps1 ./recyclarr
+          name: recyclarr-${{ steps.calc.outputs.rid }}
+          path: publish/${{ steps.calc.outputs.rid }}/*
 
   # NOTE: This is duplicated from the 'build' job. Sadly, reusable workflows cannot be invoked from
   # matrix jobs. See here:
   # https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
   musl:
     name: Build MUSL
-    needs: test
     strategy:
       fail-fast: true
       matrix:
@@ -123,10 +86,10 @@ jobs:
           - linux-musl-x64
           - linux-musl-arm
           - linux-musl-arm64
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0 # avoid shallow clone for GitVersion
 
@@ -147,12 +110,12 @@ jobs:
 
   release:
     name: Release
-    needs: [smoke, musl]
+    needs: [build, musl]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0 # avoid shallow clone for GitVersion
           # token: ${{ secrets.GITHUB_TOKEN }} # Allows git push
@@ -192,7 +155,7 @@ jobs:
 
   docker:
     name: Docker
-    needs: musl
+    needs: [build, musl]
     uses: ./.github/workflows/docker.yml
     secrets: inherit
 
@@ -202,7 +165,7 @@ jobs:
   check:
     if: always()
     name: Report Build Status
-    needs: [build, smoke]
+    needs: [build, musl]
     runs-on: ubuntu-latest
     steps:
       - name: Check if all jobs succeeded

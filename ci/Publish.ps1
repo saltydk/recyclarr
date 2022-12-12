@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory=$true)]
     [string] $Runtime,
 
     [string] $OutputDir,
@@ -14,9 +14,11 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+$extraArgs = @()
+
 if (-not $NoSingleFile) {
-    $selfContained = "true"
-    $singleFileArgs = @(
+    $extraArgs += @(
+        "--self-contained=true"
         "-p:PublishSingleFile=true"
         "-p:IncludeNativeLibrariesForSelfExtract=true"
         "-p:PublishReadyToRunComposite=true"
@@ -25,7 +27,7 @@ if (-not $NoSingleFile) {
     )
 }
 else {
-    $selfContained = "false"
+    $extraArgs += "--self-contained=false"
 }
 
 if (-not $OutputDir) {
@@ -36,8 +38,7 @@ dotnet publish $BuildPath `
     --output $OutputDir `
     --configuration $Configuration `
     --runtime $Runtime `
-    --self-contained $selfContained `
-    $singleFileArgs
+    @extraArgs
 
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish failed"
