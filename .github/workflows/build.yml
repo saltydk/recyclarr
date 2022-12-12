@@ -61,18 +61,27 @@ jobs:
 
       - name: Publish
         shell: pwsh
-        run: ci/Publish.ps1 -Runtime ${{ steps.calc.outputs.rid }}
+        run: |
+          ci/Publish.ps1 -Runtime ${{ steps.calc.outputs.rid }}
 
       - name: Smoke
         if: matrix.arch == 'x64'
         shell: pwsh
         run: ci/SmokeTest.ps1 publish/${{ steps.calc.outputs.rid }}/recyclarr
 
+      - name: Create Archive
+        shell: pwsh
+        run: >
+          ci/CreateArchive.ps1
+          -PublishDir publish
+          -ArchiveDirName ${{ steps.calc.outputs.rid }}
+          -OutputDir archive
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: recyclarr-${{ steps.calc.outputs.rid }}
-          path: publish/${{ steps.calc.outputs.rid }}/*
+          path: archive/*
 
   # NOTE: This is duplicated from the 'build' job. Sadly, reusable workflows cannot be invoked from
   # matrix jobs. See here:
@@ -134,10 +143,6 @@ jobs:
         with:
           path: publish
 
-      - name: Create Zip Files
-        shell: pwsh
-        run: ci/CreateZip.ps1 publish
-
       - name: Extract Changelog
         id: changelog
         uses: ffurrer2/extract-release-notes@v1
@@ -147,7 +152,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DEPLOY_PAT }}
         with:
-          files: publish-zip/recyclarr-*.zip
+          files: publish/*
           body: ${{ steps.changelog.outputs.release_notes }}
           tag_name: ${{ github.event.create.ref }}
           draft: false
