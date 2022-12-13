@@ -37,7 +37,6 @@ jobs:
         with:
           images: |
             ${{ github.repository }}
-            ghcr.io/${{ github.repository }}
           tags: |
             type=edge,branch=master
             ${{ env.SEMVER }},pattern={{major}}.{{minor}}.{{patch}}
